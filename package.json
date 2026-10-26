@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-cronicle",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Cronicle in Gladys Assistant: follow the jobs of your scheduled events, get triggers on failures, run events from scenes.",
   "type": "module",
   "main": "index.js",
   "scripts": {

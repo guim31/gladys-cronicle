@@ -1,0 +1,59 @@
+{
+  "code": 0,
+  "jobs": {
+    "jmvpg2yow08": {
+      "category": "general",
+      "target": "allgrp",
+      "plugin": "shellplug",
+      "params": {
+        "script": "#!/bin/sh\necho backing up\nsleep 2\nexit 0\n",
+        "annotate": 0,
+        "json": 0
+      },
+      "timezone": "Europe/Paris",
+      "timeout": 3600,
+      "catch_up": 0,
+      "notes": "",
+      "source": "API Key (gladys-full)",
+      "id": "jmvpg2yow08",
+      "time_start": 1793030529.056,
+      "hostname": "main",
+      "event": "emvpg2mmu03",
+      "now": 1793030529,
+      "event_title": "Backup OK",
+      "plugin_title": "Shell Script",
+      "category_title": "General",
+      "nice_target": "All Servers",
+      "command": "bin/shell-plugin.js",
+      "log_file": "/opt/cronicle/logs/jobs/jmvpg2yow08.log",
+      "pid": 61
+    },
+    "jmvpg2ype09": {
+      "category": "general",
+      "target": "allgrp",
+      "plugin": "shellplug",
+      "params": {
+        "script": "#!/bin/sh\nsleep 150\nexit 0\n",
+        "annotate": 0,
+        "json": 0
+      },
+      "timezone": "Europe/Paris",
+      "timeout": 3600,
+      "catch_up": 0,
+      "notes": "",
+      "source": "API Key (gladys-full)",
+      "id": "jmvpg2ype09",
+      "time_start": 1793030529.074,
+      "hostname": "main",
+      "event": "emvpg2mp605",
+      "now": 1793030529,
+      "event_title": "Long sync",
+      "plugin_title": "Shell Script",
+      "category_title": "General",
+      "nice_target": "All Servers",
+      "command": "bin/shell-plugin.js",
+      "log_file": "/opt/cronicle/logs/jobs/jmvpg2ype09.log",
+      "pid": 68
+    }
+  }
+}

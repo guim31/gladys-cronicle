@@ -1,177 +1,839 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Cronicle",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Follow your Cronicle jobs in Gladys: results, failures, stuck jobs, and run events from scenes.",
+    "fr": "Suivez vos tâches Cronicle dans Gladys : résultats, échecs, blocages, et lancez-les en scène.",
+    "de": "Verfolge deine Cronicle-Jobs in Gladys: Ergebnisse, Fehler, Hänger, Start aus Szenen.",
+    "es": "Siga sus tareas de Cronicle en Gladys: resultados, fallos, bloqueos, y láncelas en escenas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-cronicle:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-cronicle/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Cronicle",
+        "fr": "Votre Cronicle",
+        "de": "Dein Cronicle",
+        "es": "Su Cronicle"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "In Cronicle, open Admin → API Keys and create a key. Paste it below with the address of the primary server, then click Test the connection: it lists the events with their id. Every event is followed unless you list some.",
+        "fr": "Dans Cronicle, ouvrez Admin → API Keys et créez une clé. Collez-la ci-dessous avec l'adresse du serveur principal, puis cliquez sur Tester la connexion : les événements s'affichent avec leur identifiant. Tous sont suivis, sauf si vous en listez.",
+        "de": "Öffne in Cronicle Admin → API Keys und erstelle einen Schlüssel. Füge ihn unten mit der Adresse des Hauptservers ein und klicke auf „Verbindung testen“: Die Ereignisse werden mit ihrer ID aufgelistet. Alle werden verfolgt, außer du listest welche auf.",
+        "es": "En Cronicle, abra Admin → API Keys y cree una clave. Péguela abajo con la dirección del servidor principal y pulse Probar la conexión: se listan los eventos con su identificador. Se siguen todos, salvo si indica algunos."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-cronicle/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Einrichtungsanleitung",
+            "es": "Guía de instalación"
+          }
+        },
+        {
+          "url": "https://github.com/jhuckaby/Cronicle/blob/master/docs/APIReference.md",
+          "label": {
+            "en": "Cronicle API documentation",
+            "fr": "Documentation de l'API Cronicle",
+            "de": "Cronicle-API-Dokumentation",
+            "es": "Documentación de la API de Cronicle"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "Cronicle address",
+        "fr": "Adresse de Cronicle",
+        "de": "Cronicle-Adresse",
+        "es": "Dirección de Cronicle"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "The address of the primary server. Port 3012 is added to a bare IP address.",
+        "fr": "L'adresse du serveur principal. Le port 3012 est ajouté à une adresse IP seule.",
+        "de": "Die Adresse des Hauptservers. Zu einer reinen IP-Adresse wird Port 3012 ergänzt.",
+        "es": "La dirección del servidor principal. A una dirección IP sola se le añade el puerto 3012."
+      },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.2:3012",
+        "fr": "ex. http://192.168.1.2:3012",
+        "de": "z. B. http://192.168.1.2:3012",
+        "es": "p. ej. http://192.168.1.2:3012"
+      },
+      "required": false
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "api_key",
+      "type": "secret",
+      "label": {
+        "en": "API key",
+        "fr": "Clé d'API",
+        "de": "API-Schlüssel",
+        "es": "Clave de API"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "Created in Admin → API Keys. Reading needs no privilege; Run events and Abort jobs only if you allow running below.",
+        "fr": "Créée dans Admin → API Keys. La lecture ne demande aucun privilège ; Run events et Abort jobs seulement si vous autorisez le lancement ci-dessous.",
+        "de": "Erstellt unter Admin → API Keys. Lesen braucht kein Recht; Run events und Abort jobs nur, wenn du das Starten unten erlaubst.",
+        "es": "Creada en Admin → API Keys. La lectura no requiere privilegios; Run events y Abort jobs solo si autoriza el lanzamiento abajo."
+      },
+      "required": false
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "events",
+      "type": "string",
+      "label": {
+        "en": "Followed events (ids)",
+        "fr": "Événements suivis (identifiants)",
+        "de": "Verfolgte Ereignisse (IDs)",
+        "es": "Eventos seguidos (identificadores)"
+      },
+      "description": {
+        "en": "Ids of the events to follow, separated by commas. Empty: every event (50 at most). Test the connection lists them.",
+        "fr": "Identifiants des événements à suivre, séparés par des virgules. Vide : tous (50 au plus). Tester la connexion les liste.",
+        "de": "IDs der zu verfolgenden Ereignisse, durch Kommas getrennt. Leer: alle (höchstens 50). „Verbindung testen“ listet sie auf.",
+        "es": "Identificadores de los eventos a seguir, separados por comas. Vacío: todos (50 como máximo). Probar la conexión los lista."
+      },
+      "placeholder": {
+        "en": "e.g. emvpg2mmu03, emvpg2mns04",
+        "fr": "ex. emvpg2mmu03, emvpg2mns04",
+        "de": "z. B. emvpg2mmu03, emvpg2mns04",
+        "es": "p. ej. emvpg2mmu03, emvpg2mns04"
+      },
+      "required": false
+    },
+    {
+      "key": "allow_run",
+      "type": "boolean",
+      "label": {
+        "en": "Allow Gladys to run and abort the followed events",
+        "fr": "Gladys peut lancer et interrompre les événements suivis",
+        "de": "Gladys darf die verfolgten Ereignisse starten und abbrechen",
+        "es": "Permitir a Gladys lanzar e interrumpir los eventos seguidos"
+      },
+      "description": {
+        "en": "Off: Gladys only reads. On: the scene actions and the widget buttons can run or abort jobs (the key needs Run events and Abort jobs).",
+        "fr": "Désactivé : Gladys ne fait que lire. Activé : les actions de scène et les boutons du widget peuvent lancer ou interrompre des tâches (la clé doit avoir Run events et Abort jobs).",
+        "de": "Aus: Gladys liest nur. An: Die Szenenaktionen und die Widget-Schaltflächen können Jobs starten oder abbrechen (der Schlüssel braucht Run events und Abort jobs).",
+        "es": "Desactivado: Gladys solo lee. Activado: las acciones de escena y los botones del widget pueden lanzar o interrumpir tareas (la clave necesita Run events y Abort jobs)."
+      },
       "required": false,
-      "default": "celsius",
+      "default": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "stuck_minutes",
+      "type": "select",
+      "label": {
+        "en": "A job is stuck after",
+        "fr": "Une tâche est bloquée après",
+        "de": "Ein Job hängt nach",
+        "es": "Una tarea está bloqueada tras"
+      },
+      "description": {
+        "en": "A job of a followed event running longer fires the trigger “A Cronicle job is stuck”, once.",
+        "fr": "Une tâche d'un événement suivi qui tourne plus longtemps déclenche « Une tâche Cronicle est bloquée », une fois.",
+        "de": "Ein Job eines verfolgten Ereignisses, der länger läuft, löst „Ein Cronicle-Job hängt“ einmal aus.",
+        "es": "Una tarea de un evento seguido que dura más dispara «Una tarea de Cronicle está bloqueada», una vez."
+      },
+      "required": false,
+      "default": "60",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "0",
+          "label": { "en": "Never", "fr": "Jamais", "de": "Nie", "es": "Nunca" }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": { "en": "1 hour", "fr": "1 heure", "de": "1 Stunde", "es": "1 hora" }
+        },
+        {
+          "value": "120",
+          "label": { "en": "2 hours", "fr": "2 heures", "de": "2 Stunden", "es": "2 horas" }
+        },
+        {
+          "value": "240",
+          "label": { "en": "4 hours", "fr": "4 heures", "de": "4 Stunden", "es": "4 horas" }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle d'actualisation",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "How often Cronicle is read; every 5 seconds while a job of a followed event runs.",
+        "fr": "La fréquence de lecture de Cronicle ; toutes les 5 secondes pendant qu'une tâche d'un événement suivi tourne.",
+        "de": "Wie oft Cronicle gelesen wird; alle 5 Sekunden, solange ein Job eines verfolgten Ereignisses läuft.",
+        "es": "Con qué frecuencia se lee Cronicle; cada 5 segundos mientras una tarea de un evento seguido está en curso."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "60",
+      "options": [
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": { "en": "1 minute", "fr": "1 minute", "de": "1 Minute", "es": "1 minuto" }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names (set when a device is added), of the statuses and of the scene results.",
+        "fr": "Langue des noms des fonctionnalités (fixés à l'ajout d'un appareil), des statuts et des résultats de scène.",
+        "de": "Sprache der Funktionsnamen (beim Hinzufügen eines Geräts festgelegt), der Status und der Szenenergebnisse.",
+        "es": "Idioma de los nombres de las funciones (fijados al añadir un dispositivo), de los estados y de los resultados de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": { "en": "English", "fr": "Anglais", "de": "Englisch", "es": "Inglés" }
+        },
+        {
+          "value": "fr",
+          "label": { "en": "French", "fr": "Français", "de": "Französisch", "es": "Francés" }
+        },
+        {
+          "value": "de",
+          "label": { "en": "German", "fr": "Allemand", "de": "Deutsch", "es": "Alemán" }
+        },
+        {
+          "value": "es",
+          "label": { "en": "Spanish", "fr": "Espagnol", "de": "Spanisch", "es": "Español" }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "job_succeeded",
+      "label": {
+        "en": "A Cronicle job succeeds",
+        "fr": "Une tâche Cronicle réussit",
+        "de": "Ein Cronicle-Job ist erfolgreich",
+        "es": "Una tarea de Cronicle termina bien"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A job of a followed event ends with code 0, with its duration.",
+        "fr": "Une tâche d'un événement suivi se termine avec le code 0, avec sa durée.",
+        "de": "Ein Job eines verfolgten Ereignisses endet mit Code 0, mit seiner Dauer.",
+        "es": "Una tarea de un evento seguido termina con el código 0, con su duración."
       },
       "fields": [
         {
           "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
+          "source": "devices",
+          "label": {
+            "en": "Events (empty: any)",
+            "fr": "Événements (vide : tous)",
+            "de": "Ereignisse (leer: alle)",
+            "es": "Eventos (vacío: todos)"
+          }
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "event",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Event name",
+            "fr": "Nom de l'événement",
+            "de": "Name des Ereignisses",
+            "es": "Nombre del evento"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration (s)",
+            "fr": "Durée (s)",
+            "de": "Dauer (s)",
+            "es": "Duración (s)"
+          }
+        },
+        {
+          "key": "job_id",
+          "type": "string",
+          "label": {
+            "en": "Job id",
+            "fr": "Identifiant de la tâche",
+            "de": "Job-ID",
+            "es": "Identificador de la tarea"
+          }
+        }
+      ]
+    },
+    {
+      "key": "job_failed",
+      "label": {
+        "en": "A Cronicle job fails",
+        "fr": "Une tâche Cronicle échoue",
+        "de": "Ein Cronicle-Job schlägt fehl",
+        "es": "Una tarea de Cronicle falla"
+      },
+      "description": {
+        "en": "A job of a followed event ends with an error or is aborted, with its code and message (never the log).",
+        "fr": "Une tâche d'un événement suivi se termine en erreur ou est interrompue, avec son code et son message (jamais le journal).",
+        "de": "Ein Job eines verfolgten Ereignisses endet mit Fehler oder wird abgebrochen, mit Code und Meldung (nie das Protokoll).",
+        "es": "Una tarea de un evento seguido termina en error o se interrumpe, con su código y su mensaje (nunca el registro)."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Events (empty: any)",
+            "fr": "Événements (vide : tous)",
+            "de": "Ereignisse (leer: alle)",
+            "es": "Eventos (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "event",
+          "type": "string",
+          "label": {
+            "en": "Event name",
+            "fr": "Nom de l'événement",
+            "de": "Name des Ereignisses",
+            "es": "Nombre del evento"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Error message",
+            "fr": "Message d'erreur",
+            "de": "Fehlermeldung",
+            "es": "Mensaje de error"
+          }
+        },
+        {
+          "key": "code",
+          "type": "number",
+          "label": {
+            "en": "Exit code",
+            "fr": "Code de sortie",
+            "de": "Exit-Code",
+            "es": "Código de salida"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration (s)",
+            "fr": "Durée (s)",
+            "de": "Dauer (s)",
+            "es": "Duración (s)"
+          }
+        },
+        {
+          "key": "job_id",
+          "type": "string",
+          "label": {
+            "en": "Job id",
+            "fr": "Identifiant de la tâche",
+            "de": "Job-ID",
+            "es": "Identificador de la tarea"
+          }
+        }
+      ]
+    },
+    {
+      "key": "job_stuck",
+      "label": {
+        "en": "A Cronicle job is stuck",
+        "fr": "Une tâche Cronicle est bloquée",
+        "de": "Ein Cronicle-Job hängt",
+        "es": "Una tarea de Cronicle está bloqueada"
+      },
+      "description": {
+        "en": "A job of a followed event runs longer than the threshold of the configuration (once per job).",
+        "fr": "Une tâche d'un événement suivi tourne plus longtemps que le seuil de la configuration (une fois par tâche).",
+        "de": "Ein Job eines verfolgten Ereignisses läuft länger als die Schwelle der Konfiguration (einmal pro Job).",
+        "es": "Una tarea de un evento seguido dura más que el umbral de la configuración (una vez por tarea)."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Events (empty: any)",
+            "fr": "Événements (vide : tous)",
+            "de": "Ereignisse (leer: alle)",
+            "es": "Eventos (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "event",
+          "type": "string",
+          "label": {
+            "en": "Event name",
+            "fr": "Nom de l'événement",
+            "de": "Name des Ereignisses",
+            "es": "Nombre del evento"
+          }
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Running for (min)",
+            "fr": "En cours depuis (min)",
+            "de": "Läuft seit (min)",
+            "es": "En curso desde hace (min)"
+          }
+        },
+        {
+          "key": "job_id",
+          "type": "string",
+          "label": {
+            "en": "Job id",
+            "fr": "Identifiant de la tâche",
+            "de": "Job-ID",
+            "es": "Identificador de la tarea"
+          }
+        }
+      ]
+    },
+    {
+      "key": "server_unreachable",
+      "label": {
+        "en": "Cronicle stops answering",
+        "fr": "Cronicle ne répond plus",
+        "de": "Cronicle antwortet nicht mehr",
+        "es": "Cronicle deja de responder"
+      },
+      "description": {
+        "en": "Cronicle answered before and no longer does, two reads in a row (once, until it answers again).",
+        "fr": "Cronicle répondait et ne répond plus, deux lectures de suite (une fois, jusqu'à ce qu'il réponde de nouveau).",
+        "de": "Cronicle hat geantwortet und tut es zweimal hintereinander nicht mehr (einmal, bis es wieder antwortet).",
+        "es": "Cronicle respondía y ya no responde, dos lecturas seguidas (una vez, hasta que vuelva a responder)."
+      },
+      "variables": [
+        {
+          "key": "reason",
+          "type": "string",
+          "label": { "en": "Reason", "fr": "Raison", "de": "Grund", "es": "Motivo" }
+        }
+      ]
+    },
+    {
+      "key": "server_back",
+      "label": {
+        "en": "Cronicle answers again",
+        "fr": "Cronicle répond de nouveau",
+        "de": "Cronicle antwortet wieder",
+        "es": "Cronicle vuelve a responder"
+      },
+      "description": {
+        "en": "Cronicle answers again after it stopped answering, with how long it was gone.",
+        "fr": "Cronicle répond de nouveau après une coupure, avec la durée de celle-ci.",
+        "de": "Cronicle antwortet nach einem Ausfall wieder, mit dessen Dauer.",
+        "es": "Cronicle vuelve a responder tras un corte, con la duración de este."
+      },
+      "variables": [
+        {
+          "key": "down_minutes",
+          "type": "number",
+          "label": {
+            "en": "Gone for (min)",
+            "fr": "Coupure (min)",
+            "de": "Ausfall (min)",
+            "es": "Corte (min)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "run_event",
+      "label": {
+        "en": "Run a Cronicle event",
+        "fr": "Lancer un événement Cronicle",
+        "de": "Cronicle-Ereignis starten",
+        "es": "Lanzar un evento de Cronicle"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Runs a followed event, if allowed in the configuration, and can wait for its end (90 s at most).",
+        "fr": "Lance un événement suivi, si la configuration l'autorise, et peut attendre sa fin (90 s au plus).",
+        "de": "Startet ein verfolgtes Ereignis, wenn die Konfiguration es erlaubt, und kann auf sein Ende warten (höchstens 90 s).",
+        "es": "Lanza un evento seguido, si la configuración lo permite, y puede esperar a que termine (90 s como máximo)."
+      },
+      "timeout_seconds": 120,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": { "en": "Event", "fr": "Événement", "de": "Ereignis", "es": "Evento" },
+          "required": true
+        },
+        {
+          "key": "wait",
+          "type": "boolean",
+          "label": {
+            "en": "Wait for the end (90 s at most)",
+            "fr": "Attendre la fin (90 s au plus)",
+            "de": "Auf das Ende warten (höchstens 90 s)",
+            "es": "Esperar al final (90 s como máximo)"
+          },
+          "required": false,
+          "default": false
+        }
+      ],
+      "outputs": [
+        {
+          "key": "job_id",
+          "type": "string",
+          "label": {
+            "en": "Job id",
+            "fr": "Identifiant de la tâche",
+            "de": "Job-ID",
+            "es": "Identificador de la tarea"
+          }
+        },
+        {
+          "key": "queued",
+          "type": "boolean",
+          "label": {
+            "en": "Queued by Cronicle",
+            "fr": "Mis en file par Cronicle",
+            "de": "Von Cronicle eingereiht",
+            "es": "En cola en Cronicle"
+          }
+        },
+        {
+          "key": "finished",
+          "type": "boolean",
+          "label": { "en": "Finished", "fr": "Terminée", "de": "Beendet", "es": "Terminada" }
+        },
+        {
+          "key": "success",
+          "type": "boolean",
+          "label": { "en": "Succeeded", "fr": "Réussie", "de": "Erfolgreich", "es": "Correcta" }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": { "en": "Status", "fr": "Statut", "de": "Status", "es": "Estado" }
+        },
+        {
+          "key": "code",
+          "type": "number",
+          "label": {
+            "en": "Exit code",
+            "fr": "Code de sortie",
+            "de": "Exit-Code",
+            "es": "Código de salida"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Error message",
+            "fr": "Message d'erreur",
+            "de": "Fehlermeldung",
+            "es": "Mensaje de error"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration (s)",
+            "fr": "Durée (s)",
+            "de": "Dauer (s)",
+            "es": "Duración (s)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_event",
+      "label": {
+        "en": "Read a Cronicle event",
+        "fr": "Lire un événement Cronicle",
+        "de": "Cronicle-Ereignis lesen",
+        "es": "Leer un evento de Cronicle"
+      },
+      "description": {
+        "en": "Reads the state of a followed event: running, result of the last job, its message and duration.",
+        "fr": "Lit l'état d'un événement suivi : en cours, résultat de la dernière tâche, son message et sa durée.",
+        "de": "Liest den Zustand eines verfolgten Ereignisses: läuft, Ergebnis des letzten Jobs, Meldung und Dauer.",
+        "es": "Lee el estado de un evento seguido: en curso, resultado de la última tarea, su mensaje y su duración."
+      },
+      "timeout_seconds": 60,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": { "en": "Event", "fr": "Événement", "de": "Ereignis", "es": "Evento" },
           "required": true
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "status",
+          "type": "string",
+          "label": { "en": "Status", "fr": "Statut", "de": "Status", "es": "Estado" }
+        },
+        {
+          "key": "running",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": { "en": "Running", "fr": "En cours", "de": "Läuft", "es": "En ejecución" }
+        },
+        {
+          "key": "success",
+          "type": "boolean",
+          "label": {
+            "en": "Last job succeeded",
+            "fr": "Dernière tâche réussie",
+            "de": "Letzter Job erfolgreich",
+            "es": "Última tarea correcta"
+          }
+        },
+        {
+          "key": "code",
+          "type": "number",
+          "label": {
+            "en": "Exit code",
+            "fr": "Code de sortie",
+            "de": "Exit-Code",
+            "es": "Código de salida"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Error message",
+            "fr": "Message d'erreur",
+            "de": "Fehlermeldung",
+            "es": "Mensaje de error"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration (s)",
+            "fr": "Durée (s)",
+            "de": "Dauer (s)",
+            "es": "Duración (s)"
+          }
+        },
+        {
+          "key": "last_run",
+          "type": "string",
+          "label": {
+            "en": "Last run",
+            "fr": "Dernier lancement",
+            "de": "Letzter Start",
+            "es": "Último inicio"
+          }
+        },
+        {
+          "key": "enabled",
+          "type": "boolean",
+          "label": {
+            "en": "Event enabled",
+            "fr": "Événement activé",
+            "de": "Ereignis aktiviert",
+            "es": "Evento activado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "abort_job",
+      "label": {
+        "en": "Abort a Cronicle job",
+        "fr": "Interrompre une tâche Cronicle",
+        "de": "Cronicle-Job abbrechen",
+        "es": "Interrumpir una tarea de Cronicle"
+      },
+      "description": {
+        "en": "Aborts the running job of a followed event, if there is one and if allowed in the configuration.",
+        "fr": "Interrompt la tâche en cours d'un événement suivi, s'il y en a une et si la configuration l'autorise.",
+        "de": "Bricht den laufenden Job eines verfolgten Ereignisses ab, falls es einen gibt und die Konfiguration es erlaubt.",
+        "es": "Interrumpe la tarea en curso de un evento seguido, si la hay y si la configuración lo permite."
+      },
+      "timeout_seconds": 60,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": { "en": "Event", "fr": "Événement", "de": "Ereignis", "es": "Evento" },
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "key": "aborted",
+          "type": "boolean",
+          "label": {
+            "en": "A job was aborted",
+            "fr": "Une tâche a été interrompue",
+            "de": "Ein Job wurde abgebrochen",
+            "es": "Se interrumpió una tarea"
+          }
+        },
+        {
+          "key": "job_id",
+          "type": "string",
+          "label": {
+            "en": "Job id",
+            "fr": "Identifiant de la tâche",
+            "de": "Job-ID",
+            "es": "Identificador de la tarea"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "cronicle",
+      "label": {
+        "en": "Cronicle last runs",
+        "fr": "Dernières tâches Cronicle",
+        "de": "Letzte Cronicle-Jobs",
+        "es": "Últimas tareas de Cronicle"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Last jobs of the followed events, running ones first; Run buttons when allowed.",
+        "fr": "Dernières tâches des événements suivis, en cours d'abord ; boutons Lancer si autorisé.",
+        "de": "Letzte Jobs der verfolgten Ereignisse, laufende zuerst; Starten-Knöpfe, wenn erlaubt.",
+        "es": "Últimas tareas de los eventos seguidos, en curso primero; botones Lanzar si se permite."
+      },
+      "icon": "clock",
+      "action_timeout_seconds": 60,
+      "settings": [
+        {
+          "key": "events",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Events (empty: all followed)",
+            "fr": "Événements (vide : tous les suivis)",
+            "de": "Ereignisse (leer: alle verfolgten)",
+            "es": "Eventos (vacío: todos los seguidos)"
+          },
+          "description": {
+            "en": "Empty: every followed event, without buttons. Chosen events (devices added to Gladys) get a Run button, three at most, when running is allowed.",
+            "fr": "Vide : tous les événements suivis, sans boutons. Les événements choisis (appareils ajoutés à Gladys) ont un bouton Lancer, trois au plus, si le lancement est autorisé.",
+            "de": "Leer: alle verfolgten Ereignisse, ohne Knöpfe. Gewählte Ereignisse (zu Gladys hinzugefügte Geräte) bekommen einen Starten-Knopf, höchstens drei, wenn Starten erlaubt ist.",
+            "es": "Vacío: todos los eventos seguidos, sin botones. Los eventos elegidos (dispositivos añadidos a Gladys) tienen un botón Lanzar, tres como máximo, si se permite el lanzamiento."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }

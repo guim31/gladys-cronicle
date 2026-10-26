@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "stuck"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,20 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        reading timer, states, job ends / stuck / server lost -> scene events, commands
+src/devices.js                    the server device and one device per followed event: features, names, values
+src/cronicle/client.js            API /api/app/* (fetch), errors by kind, redaction of the key, normalization
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/widgets.js                    dashboard widget `cronicle` (manifest `widgets`)
+src/texts.js                      connection, error, status, report and action texts (4 languages), dates
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization, event ids
+src/store.js, src/problems.js     /data/cronicle-state.json; one log line per repeated failure
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakeCronicle.js (checked against test/fixtures/cronicle)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +74,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget content, feature names, scene outputs, manifest texts, and
+  `docs/en.md`, `docs/fr.md`, `docs/de.md`, `docs/es.md`, kept in sync
+  (`test/i18n.test.js` checks the languages and the doc sections).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -197,6 +203,63 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## Cronicle (propre à ce dépôt)
+
+- **API** `/api/app/<nom>`, clé d'API en en-tête `X-API-Key` (jamais en paramètre d'URL). Lues :
+  `get_schedule` (événements **avec leurs `params`, donc le script** : jamais conservés,
+  `normalizeEvent`), `get_active_jobs` (`{ jobs: { id: job } }`, tous serveurs), `get_history`
+  (`logs/completed`, plus récentes d'abord, `limit` 100), `get_event_history` (une fois par événement
+  suivi dont la dernière tâche n'est pas dans ces 100), `get_job_status` (tâche en cours ou finie,
+  `complete: 1`). Commandes : `run_event` `{id}` → `{ ids: [...] }`, ou `ids: []` + `queue` quand l'événement tourne déjà et a une file ; **sans file, refus** `code: "event"`, « Failed to launch event: Maximum of 1 job already running… » (vérifié) ; `abort_job` `{id}`.
+- **Pièges vérifiés sur Cronicle 0.9.80** (image `soulteary/cronicle`, admin/admin, port 3012) : **tout
+  répond HTTP 200**, erreurs comprises : `{ code: "api"|"session"|"event"|"job", description }`,
+  `code: 0` sinon. **Cronicle recopie la clé** dans `Invalid API Key: <clé>` et dans la description
+  d'une tâche interrompue par API (`Job Aborted: Manually aborted by API Key: <clé> (titre)`) :
+  tout texte lu passe par `redact` avant log, `/data` ou scène. Lecture sans aucun privilège ;
+  `run_events` et `abort_events` pour les commandes (« does not have the required privileges »). Un
+  serveur secondaire répond 302 vers le principal. Une tâche finie a `code` 0 (réussie) ou autre
+  (échec) ; une interruption (main, délai, serveur perdu) donne `code: 1` et une description en
+  `Job Aborted…`/`Aborted Job…` (statut `aborted`, déclencheur d'échec quand même). `time_start`,
+  `elapsed`, `epoch` sont en **secondes** (flottants). Les lignes d'historique d'une tâche supprimée
+  (`action: job_delete`) ou masquées par catégorie (`id: ""`) n'ont pas de `code` : ignorées.
+- **Garde-fous** : lancement et interruption **désactivés par défaut** (`allow_run`), et limités aux
+  événements suivis (tous par défaut, 50 au plus, ou la liste `events`) ; **chaque commande revérifie**
+  (`hub.assertRunAllowed`, `hub.eventOf`). Aucune commande sur les appareils ; boutons du widget avec
+  `confirm: true`, seulement pour les événements choisis dans ses réglages.
+- **Fins de tâche** : une ligne de `get_history` jamais vue (`seen`, ids de la lecture précédente) et pas plus ancienne que la plus ancienne de la lecture précédente (`lastEnd`, marge 2 s : une tâche supprimée fait entrer une plus ancienne dans la fenêtre ; une tâche enregistrée en retard compte quand même) ; rien au premier passage. « Bloquée » : tâche en cours depuis plus du
+  seuil, une fois par tâche (`stuck` dans `/data`). « Ne répond plus » (après **deux lectures en échec de suite**) / « répond de nouveau » : une fois par coupure, seulement après une lecture réussie avec la même adresse et la même clé (une clé
+  fausse tout juste saisie n'est pas une coupure). Un changement d'adresse ou de clé remet `initialized` à faux :
+  une nouvelle clé peut voir d'autres catégories, leurs tâches passées ne sont pas annoncées. La clé collée
+  par erreur dans `events` est retirée et affichée `***`.
+- Minuteur du conteneur : `pollIntervalMs`, **5 s tant qu'une tâche d'un événement suivi tourne** ;
+  une lecture hors minuteur (Actualiser, commande) qui voit une tâche en cours accélère aussitôt le
+  minuteur.
+- Budget du widget : liste de statuts (8 lignes) + texte d'erreur ou « rien » + 3 boutons
+  Lancer/Interrompre (clés `run_<id>`/`abort_<id>`, l'identifiant aussi en `params`, les deux doivent
+  concorder) + Actualiser.
+
+## Vérifié sur un vrai Cronicle
+
+Le 26/10/2026, contre `soulteary/cronicle` (Cronicle **0.9.80**) en Docker : clés d'API avec et sans
+privilèges créées par l'API, événements qui réussissent, échouent (`exit 3` avec message sur stderr) et
+durent 150 s, lancés par l'horaire et par l'API, une tâche interrompue par l'API. Réponses enregistrées
+dans `test/fixtures/cronicle` (clés remplacées).
+
+- **Image de l'intégration** lancée avec les contraintes du bac à sable (`--cap-drop ALL --security-opt
+no-new-privileges --read-only --memory 256m --pids-limit 256`, volume `/data`, réseau en pont) : sans
+  Gladys, reconnexion du SDK en backoff, pas de plantage, aucun secret dans les logs, ~18 Mo au repos.
+- **Intégration complète** dans ce conteneur (faux Gladys du SDK, noms en français, `TZ=Europe/Paris`) :
+  découverte du serveur et des trois événements, états, « Tester la connexion », « Lancer un événement
+  Cronicle » avec attente (échec code 3 avec son message en 3 s, réussite en 3 s), sans attente puis
+  relancé (refus « Maximum of 1 job already running ») puis « Interrompre une tâche Cronicle »,
+  déclencheurs réussite / échec / interruption (clé masquée), widget validé, clé sans privilège, lancement
+  désactivé, mauvaise clé, mauvais port ; puis Cronicle arrêté (« ne répond plus » au démarrage suivant)
+  et relancé (« répond de nouveau », et la tâche tuée par l'arrêt annoncée en échec : « Aborted Job:
+  Server 'main' shut down unexpectedly. »). Ni la clé ni un script dans les logs. ~90 Mo RSS.
+- Non vérifié : une instance Gladys réelle (rendu du widget et de sa confirmation, éditeur de scènes),
+  Cronicle multi-serveurs (redirection vers le principal), derrière un proxy avec sous-chemin, en HTTPS,
+  l'écran « API Keys » de l'interface (clés créées par l'API).
 
 ## Store
 
