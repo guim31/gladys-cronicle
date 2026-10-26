@@ -211,8 +211,7 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   `normalizeEvent`), `get_active_jobs` (`{ jobs: { id: job } }`, tous serveurs), `get_history`
   (`logs/completed`, plus récentes d'abord, `limit` 100), `get_event_history` (une fois par événement
   suivi dont la dernière tâche n'est pas dans ces 100), `get_job_status` (tâche en cours ou finie,
-  `complete: 1`). Commandes : `run_event` `{id}` → `{ ids: [...] }`, ou `ids: []` + `queue` quand
-  l'événement tourne déjà (mise en file) ; `abort_job` `{id}`.
+  `complete: 1`). Commandes : `run_event` `{id}` → `{ ids: [...] }`, ou `ids: []` + `queue` quand l'événement tourne déjà et a une file ; **sans file, refus** `code: "event"`, « Failed to launch event: Maximum of 1 job already running… » (vérifié) ; `abort_job` `{id}`.
 - **Pièges vérifiés sur Cronicle 0.9.80** (image `soulteary/cronicle`, admin/admin, port 3012) : **tout
   répond HTTP 200**, erreurs comprises : `{ code: "api"|"session"|"event"|"job", description }`,
   `code: 0` sinon. **Cronicle recopie la clé** dans `Invalid API Key: <clé>` et dans la description
@@ -246,7 +245,22 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 Le 26/10/2026, contre `soulteary/cronicle` (Cronicle **0.9.80**) en Docker : clés d'API avec et sans
 privilèges créées par l'API, événements qui réussissent, échouent (`exit 3` avec message sur stderr) et
 durent 150 s, lancés par l'horaire et par l'API, une tâche interrompue par l'API. Réponses enregistrées
-dans `test/fixtures/cronicle` (clés remplacées). Voir le rapport de la PR pour le test de l'image.
+dans `test/fixtures/cronicle` (clés remplacées).
+
+- **Image de l'intégration** lancée avec les contraintes du bac à sable (`--cap-drop ALL --security-opt
+no-new-privileges --read-only --memory 256m --pids-limit 256`, volume `/data`, réseau en pont) : sans
+  Gladys, reconnexion du SDK en backoff, pas de plantage, aucun secret dans les logs, ~18 Mo au repos.
+- **Intégration complète** dans ce conteneur (faux Gladys du SDK, noms en français, `TZ=Europe/Paris`) :
+  découverte du serveur et des trois événements, états, « Tester la connexion », « Lancer un événement
+  Cronicle » avec attente (échec code 3 avec son message en 3 s, réussite en 3 s), sans attente puis
+  relancé (refus « Maximum of 1 job already running ») puis « Interrompre une tâche Cronicle »,
+  déclencheurs réussite / échec / interruption (clé masquée), widget validé, clé sans privilège, lancement
+  désactivé, mauvaise clé, mauvais port ; puis Cronicle arrêté (« ne répond plus » au démarrage suivant)
+  et relancé (« répond de nouveau », et la tâche tuée par l'arrêt annoncée en échec : « Aborted Job:
+  Server 'main' shut down unexpectedly. »). Ni la clé ni un script dans les logs. ~90 Mo RSS.
+- Non vérifié : une instance Gladys réelle (rendu du widget et de sa confirmation, éditeur de scènes),
+  Cronicle multi-serveurs (redirection vers le principal), derrière un proxy avec sous-chemin, en HTTPS,
+  l'écran « API Keys » de l'interface (clés créées par l'API).
 
 ## Store
 

@@ -143,7 +143,7 @@ annoncée une fois.
 - **Lancer un événement Cronicle** : lance un événement suivi, si le lancement
   est autorisé. Avec **Attendre la fin (90 s au plus)**, la scène attend la
   tâche et les actions suivantes reçoivent son résultat. Sorties : identifiant
-  de la tâche, mis en file par Cronicle (l'événement tournait déjà), terminée,
+  de la tâche, mis en file par Cronicle (événement avec file d'attente, qui tournait déjà), terminée,
   réussie, statut, code de sortie, message d'erreur, durée (s).
 - **Lire un événement Cronicle** : l'état d'un événement suivi, pour une
   condition. Sorties : statut, en cours, dernière tâche réussie, code de
@@ -195,9 +195,7 @@ encore dans Gladys.
 - « Attendre la fin » attend 90 s au plus (la limite d'une action de scène dans
   Gladys) ; une tâche plus longue continue, et les déclencheurs annoncent sa
   fin.
-- Un événement limité à une tâche à la fois est mis en file par Cronicle quand
-  il tourne déjà : l'action répond alors « mis en file », sans identifiant de
-  tâche.
+- Un événement qui tourne déjà autant de fois qu'il le peut est refusé par Cronicle (sa raison s'affiche), ou mis en file si l'événement a une file d'attente : l'action répond alors « mis en file », sans identifiant de tâche.
 - Développée et testée contre Cronicle 0.9.80 ; les autres versions 0.9.x
   devraient fonctionner (même API), sans test. Sans lien avec Cronicle ni son
   auteur.

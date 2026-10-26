@@ -128,8 +128,7 @@ the integration restarted is announced once.
 
 - **Run a Cronicle event**: runs a followed event, when running is allowed.
   With **Wait for the end (90 s at most)**, the scene waits for the job and
-  the next actions get its result. Outputs: job id, queued by Cronicle (the
-  event was already running), finished, succeeded, status, exit code, error
+  the next actions get its result. Outputs: job id, queued by Cronicle (an event with a queue, already running), finished, succeeded, status, exit code, error
   message, duration (s).
 - **Read a Cronicle event**: the state of a followed event, for a condition.
   Outputs: status, running, last job succeeded, exit code, error message,
@@ -174,7 +173,6 @@ exists in Gladys.
   the one Cronicle shows in its history (any API key in it is hidden).
 - "Wait for the end" waits 90 s at most (the limit of a scene action in
   Gladys); a longer job goes on, and the triggers report its end.
-- An event limited to one job at a time is queued by Cronicle when it already
-  runs: the action then says "queued", without a job id.
+- An event already running as many jobs as it may is refused by Cronicle (its reason is shown), or queued when the event has a queue: the action then says "queued", without a job id.
 - Developed and tested against Cronicle 0.9.80; other 0.9.x versions should
   work (same API), untested. Not affiliated with Cronicle or its author.

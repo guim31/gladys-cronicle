@@ -141,8 +141,7 @@ anuncia una vez.
 - **Lanzar un evento de Cronicle**: lanza un evento seguido, si se permite el
   lanzamiento. Con **Esperar al final (90 s como máximo)**, la escena espera a
   la tarea y las acciones siguientes reciben su resultado. Salidas:
-  identificador de la tarea, en cola en Cronicle (el evento ya estaba en
-  curso), terminada, correcta, estado, código de salida, mensaje de error,
+  identificador de la tarea, en cola en Cronicle (evento con cola, ya en curso), terminada, correcta, estado, código de salida, mensaje de error,
   duración (s).
 - **Leer un evento de Cronicle**: el estado de un evento seguido, para una
   condición. Salidas: estado, en ejecución, última tarea correcta, código de
@@ -193,9 +192,7 @@ Gladys.
 - «Esperar al final» espera 90 s como máximo (el límite de una acción de
   escena en Gladys); una tarea más larga continúa, y los disparadores anuncian
   su final.
-- Un evento limitado a una tarea a la vez queda en cola en Cronicle cuando ya
-  está en curso: la acción responde entonces «en cola», sin identificador de
-  tarea.
+- Un evento que ya está en curso tantas veces como puede es rechazado por Cronicle (se muestra el motivo), o queda en cola si el evento tiene cola: la acción responde entonces «en cola», sin identificador de tarea.
 - Desarrollada y probada con Cronicle 0.9.80; las demás versiones 0.9.x
   deberían funcionar (misma API), sin probar. Sin relación con Cronicle ni con
   su autor.

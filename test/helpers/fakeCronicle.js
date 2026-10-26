@@ -26,7 +26,7 @@ export class FakeCronicle {
     this.request = this.request.bind(this);
   }
 
-  addEvent(id, title, { timing = {}, enabled = 1 } = {}) {
+  addEvent(id, title, { timing = {}, enabled = 1, queue = 0 } = {}) {
     this.events.unshift({
       enabled,
       title,
@@ -38,6 +38,7 @@ export class FakeCronicle {
       timing,
       timezone: 'Europe/Paris',
       max_children: 1,
+      queue,
       id,
       username: 'admin',
     });
@@ -67,6 +68,7 @@ export class FakeCronicle {
     delete job.enabled;
     delete job.timing;
     delete job.username;
+    delete job.queue;
     this.active.set(job.id, job);
     return job;
   }
@@ -176,7 +178,13 @@ export class FakeCronicle {
           return error('event', `Failed to locate event: ${params.id}`);
         }
         if ([...this.active.values()].some((job) => job.event === event.id)) {
-          return json({ code: 0, ids: [], queue: 1 });
+          // At its limit of jobs: queued when the event has a queue, refused otherwise.
+          return event.queue
+            ? json({ code: 0, ids: [], queue: 1 })
+            : error(
+                'event',
+                `Failed to launch event: Maximum of 1 job already running for event: ${event.title}`,
+              );
         }
         const job = this.start(event.title, { source: `API Key (${title})` });
         return json({ code: 0, ids: [job.id] });
@@ -204,7 +212,7 @@ export class FakeCronicle {
 /** Three events, a success and a failure already. */
 export function sampleCronicle() {
   const cronicle = new FakeCronicle();
-  cronicle.addEvent('ebackup0001', 'Nightly backup');
+  cronicle.addEvent('ebackup0001', 'Nightly backup', { queue: 1 });
   cronicle.addEvent('ediskchk002', 'Disk check', { timing: false });
   cronicle.addEvent('esync000003', 'Long sync', { timing: false });
   cronicle.ran('Nightly backup', { elapsed: 34.5 });

@@ -137,7 +137,7 @@ Integration endete, wird einmal gemeldet.
 - **Cronicle-Ereignis starten**: startet ein verfolgtes Ereignis, wenn Starten
   erlaubt ist. Mit **Auf das Ende warten (höchstens 90 s)** wartet die Szene
   auf den Job, und die nächsten Aktionen bekommen sein Ergebnis. Ausgaben:
-  Job-ID, von Cronicle eingereiht (das Ereignis lief schon), beendet,
+  Job-ID, von Cronicle eingereiht (Ereignis mit Warteschlange, lief schon), beendet,
   erfolgreich, Status, Exit-Code, Fehlermeldung, Dauer (s).
 - **Cronicle-Ereignis lesen**: der Zustand eines verfolgten Ereignisses, für
   eine Bedingung. Ausgaben: Status, läuft, letzter Job erfolgreich, Exit-Code,
@@ -187,9 +187,7 @@ in Gladys noch existiert.
   API-Schlüssel darin wird verborgen).
 - „Auf das Ende warten“ wartet höchstens 90 s (die Grenze einer Szenenaktion
   in Gladys); ein längerer Job läuft weiter, und die Auslöser melden sein Ende.
-- Ein Ereignis, das auf einen Job gleichzeitig begrenzt ist, wird von Cronicle
-  eingereiht, wenn es schon läuft: Die Aktion meldet dann „eingereiht“, ohne
-  Job-ID.
+- Ein Ereignis, das schon so oft läuft, wie es darf, wird von Cronicle abgelehnt (der Grund wird angezeigt), oder eingereiht, wenn das Ereignis eine Warteschlange hat: Die Aktion meldet dann „eingereiht“, ohne Job-ID.
 - Entwickelt und getestet mit Cronicle 0.9.80; andere 0.9.x-Versionen sollten
   funktionieren (gleiche API), ungetestet. Nicht mit Cronicle oder seinem
   Autor verbunden.

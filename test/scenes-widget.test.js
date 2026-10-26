@@ -48,11 +48,23 @@ test('"Run a Cronicle event": the job as outputs, then its end when waiting', as
     id: 'ebackup0001',
   });
 
-  // Already running: Cronicle queues the run, no job id.
+  // Already running: Cronicle queues the run (an event with a queue), no job id…
   const queued = await world.fake.sceneAction('run_event', {
     device: idsOf(world, 'Nightly backup').device,
   });
   assert.equal(queued.data.outputs.queued, true);
+  assert.equal(queued.data.outputs.job_id, '');
+  // … or refuses it with its reason (as Cronicle 0.9.80 answers).
+  world.cronicle.start('Long sync');
+  const refused = await world.fake.sceneAction('run_event', {
+    device: idsOf(world, 'Long sync').device,
+  });
+  assert.equal(refused.success, false);
+  assert.equal(
+    refused.error,
+    'refused by Cronicle (Failed to launch event: Maximum of 1 job already running for event: Long sync)',
+  );
+  world.cronicle.finish([...world.cronicle.active.values()].find((j) => j.event === 'esync000003'));
   world.cronicle.finish(job);
 
   // Waiting: the job ends while the action waits.

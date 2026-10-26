@@ -256,6 +256,24 @@ test('Cronicle lost then back: one trigger each, the badge and "reachable" follo
   assert.equal(world.fake.connectionStatus.connected, true);
 });
 
+test('Cronicle lost while the integration was stopped: announced at the start', async (t) => {
+  const clock = createClock();
+  const cronicle = sampleCronicle();
+  const first = await createWorld({ clock, cronicle });
+  await first.app.stop();
+  cronicle.down = 'ECONNREFUSED';
+  const second = await createWorld({ clock, cronicle, dataDir: first.dataDir });
+  await second.app.stop();
+  assert.equal(events(second, TRIGGERS.UNREACHABLE).length, 1);
+  clock.advance(3 * 60_000);
+  cronicle.down = null;
+  const third = await createWorld({ clock, cronicle, dataDir: first.dataDir });
+  t.after(() => third.app.stop());
+  assert.deepEqual(events(third, TRIGGERS.BACK), [
+    { key: TRIGGERS.BACK, data: { down_minutes: 3 } },
+  ]);
+});
+
 test('a wrong key typed is not "Cronicle stops answering", and is never logged', async (t) => {
   const world = await createWorld();
   t.after(() => world.app.stop());

@@ -180,10 +180,10 @@ export const ACTION_TEXT = {
     es: 'Tarea iniciada.',
   },
   queued: {
-    en: 'Run queued by Cronicle (the event is already running).',
-    fr: "Lancement mis en file par Cronicle (l'événement tourne déjà).",
-    de: 'Start von Cronicle eingereiht (das Ereignis läuft bereits).',
-    es: 'Lanzamiento en cola en Cronicle (el evento ya está en curso).',
+    en: 'Run queued by Cronicle (the event already runs, it has a queue).',
+    fr: "Lancement mis en file par Cronicle (l'événement tourne déjà et a une file d'attente).",
+    de: 'Start von Cronicle eingereiht (das Ereignis läuft bereits und hat eine Warteschlange).',
+    es: 'Lanzamiento en cola en Cronicle (el evento ya está en curso y tiene cola).',
   },
   abortRequested: {
     en: 'Abort requested.',

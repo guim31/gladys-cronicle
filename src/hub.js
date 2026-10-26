@@ -208,6 +208,8 @@ export class CronicleHub {
     }
     const signature = JSON.stringify([config.url, config.apiKey]);
     if (signature !== this.signature) {
+      // null: the first configuration since the start, not a change.
+      const changed = this.signature !== null;
       this.signature = signature;
       this.client =
         config.url && config.apiKey
@@ -227,9 +229,11 @@ export class CronicleHub {
       if (config.url) {
         this.saved.url = config.url;
       }
-      // A key just typed may be wrong: that is not Cronicle going down.
-      this.saved.reachable = null;
-      this.saved.downSince = null;
+      if (changed) {
+        // A key just typed may be wrong: that is not Cronicle going down.
+        this.saved.reachable = null;
+        this.saved.downSince = null;
+      }
     }
     try {
       if (this.client) {
