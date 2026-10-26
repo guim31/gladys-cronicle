@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-26
+
 ### Added
 
 - A Cronicle server device: reachable, running jobs, failures of the last 24
@@ -28,4 +30,5 @@ the notes of the version's GitHub Release.
 - "Test the connection" lists every event the API key sees, with its id.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-cronicle/commits/main
+[Unreleased]: https://github.com/guim31/gladys-cronicle/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-cronicle/releases/tag/v1.0.0
