@@ -1,41 +1,102 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene action handlers (manifest `scene_actions`, Gladys 5.1+).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
+// "Run a Cronicle event": runs a followed event — only when running from
+// Gladys is allowed in the configuration (off by default) — and optionally
+// waits for its end (up to `waitMs` of the hub timings, within the 120 s the
+// core grants a scene action) so the next actions know whether it succeeded.
+// A longer job goes on in Cronicle: the "job succeeded / failed" triggers
+// report its end.
 //
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
+// "Read a Cronicle event": the state of a followed event (running, last
+// result, its message and duration), for a condition in a scene.
 //
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// "Abort a Cronicle job": aborts the running job of a followed event, if any
+// (same switch as running).
+//
+// The event is chosen among the devices of the integration (added in Gladys),
+// and checked against the followed events again here.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
+import { JOB_STATUSES } from './cronicle/client.js';
+import { currentJob, durationOf, isRunning, statusOf } from './devices.js';
+import { ERROR_TEXT, STATUS_TEXT, formatTime, pick } from './texts.js';
 
-const logger = createLogger({ name: 'scenes' });
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The outputs of "Run a Cronicle event", for a job as last seen. */
+function runOutputs(job, { queued = false } = {}, language) {
+  return {
+    job_id: job?.id ?? '',
+    queued,
+    finished: Boolean(job) && !isRunning(job),
+    success: job?.status === JOB_STATUSES.SUCCESS,
+    status: pick(STATUS_TEXT[job ? statusOf(job) : 'never'], language),
+    code: job?.code ?? 0,
+    message: job?.description || '',
+    duration: durationOf(job) ?? 0,
+  };
+}
 
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  async run_event(hub, { fields = {} }) {
+    const { waitMs, waitStepMs: stepMs } = hub.timings;
+    // Counted from the start of the action: the run and its read are on the
+    // same budget as the wait (the core cuts the action at its timeout).
+    const deadline = Date.now() + waitMs;
+    const language = hub.config.language;
+    hub.assertRunAllowed(language);
+    const event = await hub.eventOf(fields.device);
+    if (Date.now() >= deadline) {
+      // Cronicle was too slow to answer: better not run than run twice
+      // (the core would report a timeout, and the scene could be run again).
+      throw new Error(pick(ERROR_TEXT.timeout, language));
+    }
+    const started = await hub.run(event);
+    if (started.queued) {
+      return runOutputs(null, { queued: true }, language);
+    }
+    const jobId = started.ids[0];
+    let job = { id: jobId, status: JOB_STATUSES.RUNNING, code: null, description: '' };
+    if (fields.wait === true || fields.wait === 'true') {
+      while (isRunning(job) && Date.now() + stepMs <= deadline) {
+        await sleep(stepMs);
+        try {
+          job = await hub.job(jobId);
+        } catch {
+          break; // the job goes on in Cronicle: "not finished" is the truth we know
+        }
+      }
+      if (!isRunning(job)) {
+        // The states and the triggers follow at once, without holding the scene.
+        hub.pollNow().catch(() => {});
+      }
+    }
+    return runOutputs(job, {}, language);
+  },
+
+  async get_event(hub, { fields = {} }) {
+    const language = hub.config.language;
+    await hub.refreshIfStale();
+    const event = await hub.eventOf(fields.device);
+    const current = currentJob(event);
+    const last = event.lastJob;
+    return {
+      status: pick(STATUS_TEXT[statusOf(current)], language),
+      running: Boolean(event.activeJob),
+      success: last?.status === JOB_STATUSES.SUCCESS,
+      code: last?.code ?? 0,
+      message: last?.description || '',
+      duration: durationOf(last) ?? 0,
+      last_run: current?.start ? formatTime(current.start, language) : '',
+      enabled: event.enabled,
+    };
+  },
+
+  async abort_job(hub, { fields = {} }) {
+    hub.assertRunAllowed();
+    const event = await hub.eventOf(fields.device);
+    const job = await hub.abort(event);
+    return { aborted: job !== null, job_id: job?.id ?? '' };
   },
 };

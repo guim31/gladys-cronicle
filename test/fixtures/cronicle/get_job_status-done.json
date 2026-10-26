@@ -1,0 +1,36 @@
+{
+  "code": 0,
+  "job": {
+    "category": "general",
+    "target": "allgrp",
+    "plugin": "shellplug",
+    "params": {
+      "script": "#!/bin/sh\necho backing up\nsleep 2\nexit 0\n",
+      "annotate": 0,
+      "json": 0
+    },
+    "timezone": "Europe/Paris",
+    "timeout": 3600,
+    "catch_up": 0,
+    "notes": "",
+    "now": 1793031000,
+    "id": "jmvpgd25g0h",
+    "time_start": 1793031000.1,
+    "hostname": "main",
+    "event": "emvpg2mmu03",
+    "event_title": "Backup OK",
+    "plugin_title": "Shell Script",
+    "category_title": "General",
+    "nice_target": "All Servers",
+    "command": "bin/shell-plugin.js",
+    "log_file": "/opt/cronicle/logs/jobs/jmvpgd25g0h.log",
+    "pid": 193,
+    "log_file_size": 193,
+    "complete": 1,
+    "code": 0,
+    "description": "",
+    "time_end": 1793031002.226,
+    "elapsed": 2.126000165939331,
+    "type": "cronicle_job"
+  }
+}

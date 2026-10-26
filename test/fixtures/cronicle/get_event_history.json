@@ -1,0 +1,32 @@
+{
+  "code": 0,
+  "rows": [
+    {
+      "id": "jmvpg2yof07",
+      "code": 3,
+      "event": "emvpg2mns04",
+      "category": "general",
+      "plugin": "shellplug",
+      "hostname": "main",
+      "time_start": 1793030529.039,
+      "elapsed": 0.13899993896484375,
+      "perf": "",
+      "cpu": {},
+      "mem": {},
+      "log_file_size": 257,
+      "action": "job_complete",
+      "epoch": 1793030529,
+      "event_title": "Disk check fails",
+      "category_title": "General",
+      "plugin_title": "Shell Script",
+      "description": "Script exited with code: 3: disk full on /var"
+    }
+  ],
+  "list": {
+    "page_size": 50,
+    "first_page": 0,
+    "last_page": 0,
+    "length": 1,
+    "type": "list"
+  }
+}

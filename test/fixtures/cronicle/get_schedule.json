@@ -1,0 +1,78 @@
+{
+  "code": 0,
+  "rows": [
+    {
+      "enabled": 1,
+      "title": "Long sync",
+      "category": "general",
+      "target": "allgrp",
+      "plugin": "shellplug",
+      "params": {
+        "script": "#!/bin/sh\nsleep 150\nexit 0\n",
+        "annotate": 0,
+        "json": 0
+      },
+      "timing": false,
+      "timezone": "Europe/Paris",
+      "max_children": 1,
+      "timeout": 3600,
+      "catch_up": 0,
+      "notes": "",
+      "id": "emvpg2mp605",
+      "modified": 1793030513,
+      "created": 1793030513,
+      "username": "admin"
+    },
+    {
+      "enabled": 1,
+      "title": "Disk check fails",
+      "category": "general",
+      "target": "allgrp",
+      "plugin": "shellplug",
+      "params": {
+        "script": "#!/bin/sh\necho checking\necho \"disk full on /var\" >&2\nexit 3\n",
+        "annotate": 0,
+        "json": 0
+      },
+      "timing": false,
+      "timezone": "Europe/Paris",
+      "max_children": 1,
+      "timeout": 3600,
+      "catch_up": 0,
+      "notes": "",
+      "id": "emvpg2mns04",
+      "modified": 1793030513,
+      "created": 1793030513,
+      "username": "admin"
+    },
+    {
+      "enabled": 1,
+      "title": "Backup OK",
+      "category": "general",
+      "target": "allgrp",
+      "plugin": "shellplug",
+      "params": {
+        "script": "#!/bin/sh\necho backing up\nsleep 2\nexit 0\n",
+        "annotate": 0,
+        "json": 0
+      },
+      "timing": {},
+      "timezone": "Europe/Paris",
+      "max_children": 1,
+      "timeout": 3600,
+      "catch_up": 0,
+      "notes": "",
+      "id": "emvpg2mmu03",
+      "modified": 1793030513,
+      "created": 1793030513,
+      "username": "admin"
+    }
+  ],
+  "list": {
+    "page_size": 50,
+    "first_page": 0,
+    "last_page": 0,
+    "length": 3,
+    "type": "list"
+  }
+}
