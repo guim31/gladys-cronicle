@@ -74,10 +74,10 @@ export const ERROR_TEXT = {
     es: 'no hay ninguna API de Cronicle en esta dirección',
   },
   [ERROR_KINDS.REDIRECT]: {
-    en: 'the address redirects: enter the https:// address of the primary server',
-    fr: "l'adresse redirige : saisissez l'adresse https:// du serveur principal",
-    de: 'die Adresse leitet um: Gib die https://-Adresse des Hauptservers ein',
-    es: 'la dirección redirige: introduzca la dirección https:// del servidor principal',
+    en: 'the address redirects: enter the https:// address, or the primary server',
+    fr: "l'adresse redirige : saisissez l'adresse https://, ou le serveur principal",
+    de: 'die Adresse leitet um: Gib die https://-Adresse ein, oder den Hauptserver',
+    es: 'la dirección redirige: introduzca la dirección https://, o el servidor principal',
   },
   [ERROR_KINDS.NOT_FOUND]: {
     en: 'this event or job no longer exists in Cronicle',
@@ -119,7 +119,7 @@ export const REPORT_TEXT = {
     missing: (ids) => `Followed but not found: ${ids}`,
     invalid: (parts) => `Not understood in the list: ${parts}`,
     runOff: 'Running from Gladys is off (configuration).',
-    runOn: 'Running from Gladys is on: the key needs the Run events privilege.',
+    runOn: 'Running from Gladys is on: the key needs Run events and Abort jobs.',
   },
   fr: {
     ok: 'Connecté',
@@ -129,7 +129,7 @@ export const REPORT_TEXT = {
     missing: (ids) => `Suivis mais introuvables : ${ids}`,
     invalid: (parts) => `Incompris dans la liste : ${parts}`,
     runOff: 'Lancement depuis Gladys désactivé (configuration).',
-    runOn: 'Lancement depuis Gladys activé : la clé doit avoir le privilège Run events.',
+    runOn: 'Lancement depuis Gladys activé : la clé doit avoir Run events et Abort jobs.',
   },
   de: {
     ok: 'Verbunden',
@@ -139,7 +139,7 @@ export const REPORT_TEXT = {
     missing: (ids) => `Verfolgt, aber nicht gefunden: ${ids}`,
     invalid: (parts) => `In der Liste nicht verstanden: ${parts}`,
     runOff: 'Starten aus Gladys ist aus (Konfiguration).',
-    runOn: 'Starten aus Gladys ist an: Der Schlüssel braucht das Recht Run events.',
+    runOn: 'Starten aus Gladys ist an: Der Schlüssel braucht Run events und Abort jobs.',
   },
   es: {
     ok: 'Conectado',
@@ -149,7 +149,7 @@ export const REPORT_TEXT = {
     missing: (ids) => `Seguidos pero no encontrados: ${ids}`,
     invalid: (parts) => `No entendido en la lista: ${parts}`,
     runOff: 'El lanzamiento desde Gladys está desactivado (configuración).',
-    runOn: 'El lanzamiento desde Gladys está activado: la clave necesita el privilegio Run events.',
+    runOn: 'El lanzamiento desde Gladys está activado: la clave necesita Run events y Abort jobs.',
   },
 };
 
@@ -227,13 +227,13 @@ export function formatTime(time, language) {
 
 /** A duration in words-free units: 42 s, 3 min, 2 h 05. */
 export function formatDuration(seconds) {
-  if (seconds < 60) {
+  if (Math.round(seconds) < 60) {
     return `${Math.round(seconds)} s`;
   }
-  if (seconds < 3600) {
-    return `${Math.round(seconds / 60)} min`;
-  }
   const minutes = Math.round(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 }
 

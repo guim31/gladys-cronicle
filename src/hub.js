@@ -74,10 +74,13 @@ export const HUB_TIMINGS = {
 // Completed jobs read at every cycle (newest first).
 export const HISTORY_ROWS = 100;
 const DAY_MS = 24 * 3600_000;
-// A completed job is new when it ended after the newest one already seen,
-// with this margin: Cronicle stamps the end to the millisecond, two jobs may
-// end in the same instant.
+// A completed job is new when it is not in the previous history read and did
+// not end before the oldest job of that read (a deleted job lets an older one
+// into the window), with this margin.
 const END_MARGIN_MS = 2_000;
+// Failed reads in a row before "Cronicle stops answering": one timeout under
+// load is not an outage.
+export const FAILED_READS_BEFORE_DOWN = 2;
 const MAX_TRANSPORTS_PER_REQUEST = 100;
 // Lines of the "Test the connection" report, at most.
 const MAX_REPORT_LINES = 30;
@@ -129,6 +132,7 @@ export class CronicleHub {
     this.recent = [];
     this.readAt = 0;
     this.error = null;
+    this.failedReads = 0;
     this.polling = null;
     this.transports = new Map();
     this.connection = null;
@@ -145,7 +149,7 @@ export class CronicleHub {
   }
 
   emptySaved() {
-    // seen: job ids of the last history read; lastEnd: newest end among them;
+    // seen: job ids of the last history read; lastEnd: oldest end among them;
     // lastJobs: event id → last completed job; stuck: running job ids already
     // announced as stuck; reachable: Cronicle answered at the last read
     // (null: unknown); downSince: when it stopped answering.
@@ -233,7 +237,10 @@ export class CronicleHub {
         // A key just typed may be wrong: that is not Cronicle going down.
         this.saved.reachable = null;
         this.saved.downSince = null;
+        // Another key may see other categories: their past jobs are not news.
+        this.saved.initialized = false;
       }
+      this.failedReads = 0;
     }
     try {
       if (this.client) {
@@ -396,6 +403,7 @@ export class CronicleHub {
       logger.info('Cronicle answers again');
     }
     this.error = null;
+    this.failedReads = 0;
     this.readAt = now;
     this.schedule = schedule;
 
@@ -427,8 +435,9 @@ export class CronicleHub {
       dirty = true;
     }
 
-    // Jobs completed since the last read: not seen, and ended after the
-    // newest one seen (a deleted job lets an older one into the window).
+    // Jobs completed since the last read: not seen, and not older than the
+    // oldest one seen (a deleted job lets an older one into the window). A
+    // job recorded late, with an end older than newer jobs, still counts.
     const seen = new Set(saved.seen);
     const fresh = history.filter(
       (job) => !seen.has(job.id) && (job.end ?? now) >= saved.lastEnd - END_MARGIN_MS,
@@ -443,7 +452,8 @@ export class CronicleHub {
     const ids = history.map((job) => job.id);
     if (JSON.stringify(ids) !== JSON.stringify(saved.seen)) {
       saved.seen = ids;
-      saved.lastEnd = Math.max(saved.lastEnd, ...history.map((job) => job.end ?? 0));
+      const ends = history.map((job) => job.end).filter((end) => end !== null);
+      saved.lastEnd = ends.length > 0 ? Math.min(...ends) : saved.lastEnd;
       dirty = true;
     }
 
@@ -578,7 +588,8 @@ export class CronicleHub {
     if (wasError !== err.kind) {
       logger.warn(`Cronicle: ${err.message}`);
     }
-    if (this.saved.reachable === true) {
+    this.failedReads = (this.failedReads ?? 0) + 1;
+    if (this.saved.reachable === true && this.failedReads >= FAILED_READS_BEFORE_DOWN) {
       // Lost after having answered: announced once (not for a key just typed).
       this.saved.reachable = false;
       this.saved.downSince = now;
@@ -774,10 +785,10 @@ export class CronicleHub {
   // --- Commands (scene actions, widget, report) --------------------------------
 
   /** Throws the reason Cronicle cannot answer, if any. */
-  assertReadable() {
+  assertReadable(language = this.config.language) {
     const status = this.connectionStatus();
     if (!status.connected) {
-      throw new Error(pick(status.message, this.config.language));
+      throw new Error(pick(status.message, language));
     }
   }
 
@@ -801,6 +812,7 @@ export class CronicleHub {
    * every command: an event that is not followed is refused, whatever asks.
    */
   async eventOf(idOrExternalId, language = this.config.language) {
+    // (language: the widget answers in the language of the user.)
     const id =
       parseEventId(this.gladys, idOrExternalId) ??
       (typeof idOrExternalId === 'string' && /^\w{1,40}$/.test(idOrExternalId)
@@ -809,10 +821,10 @@ export class CronicleHub {
     if (!id) {
       throw new Error(pick(ACTION_TEXT.notFollowed, language));
     }
-    this.assertReadable();
+    this.assertReadable(language);
     if (!this.events.has(id)) {
       await this.refreshIfStale();
-      this.assertReadable();
+      this.assertReadable(language);
     }
     const event = this.events.get(id);
     if (!event) {
@@ -860,8 +872,8 @@ export class CronicleHub {
    */
   async abort(event, language = this.config.language) {
     this.assertRunAllowed(language);
-    // A fresh read: the job may have been started outside Gladys a moment ago.
-    await this.pollNow();
+    // A recent read: the job may have been started outside Gladys a moment ago.
+    await this.refreshIfStale();
     const job = this.events.get(event.id)?.activeJob;
     if (!job) {
       return null;

@@ -127,8 +127,7 @@ l'envoyer. **Actualiser** relit Cronicle.
   plus longtemps que le seuil de la configuration, une fois par tâche.
   Variables : nom de l'événement, en cours depuis (min), identifiant de la
   tâche.
-- **Cronicle ne répond plus** : Cronicle répondait à la lecture précédente et
-  ne répond plus, une fois. Variable : la raison.
+- **Cronicle ne répond plus** : Cronicle répondait et ne répond plus, deux lectures de suite ; une fois. Variable : la raison.
 - **Cronicle répond de nouveau** : après une coupure. Variable : durée de la
   coupure (min).
 

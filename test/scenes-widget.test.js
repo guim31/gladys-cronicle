@@ -198,28 +198,48 @@ test('the widget: Run / Abort buttons for the chosen events, confirmed, checked 
     assert.ok(discovered.has(buildEventDevice(world.gladys, event).external_id));
   }
 
-  const run = await world.fake.widgetAction(WIDGET_KEY, 'run_esync000003', {
-    event: 'esync000003',
-  });
+  const run = await world.fake.widgetAction(
+    WIDGET_KEY,
+    'run_esync000003',
+    { event: 'esync000003' },
+    { settings },
+  );
   assert.equal(run.success, true, run.error);
   assert.equal(run.data.message.en, 'Job started.');
   const again = await world.fake.widgetGet(WIDGET_KEY, { settings, language: 'en' });
   const abort = again.data.content.components.find((c) => c.action?.key === 'abort_esync000003');
   assert.equal(abort.label, 'Abort Long sync');
-  const aborted = await world.fake.widgetAction(WIDGET_KEY, 'abort_esync000003', {
-    event: 'esync000003',
-  });
+  const aborted = await world.fake.widgetAction(
+    WIDGET_KEY,
+    'abort_esync000003',
+    { event: 'esync000003' },
+    { settings },
+  );
   assert.equal(aborted.data.message.en, 'Abort requested.');
 
   // A key and params that disagree, or running switched off: refused.
-  const forged = await world.fake.widgetAction(WIDGET_KEY, 'run_esync000003', {
-    event: 'ebackup0001',
-  });
+  const forged = await world.fake.widgetAction(
+    WIDGET_KEY,
+    'run_esync000003',
+    { event: 'ebackup0001' },
+    { settings },
+  );
   assert.equal(forged.success, false);
+  // An event not chosen in the settings has no button: refused too.
+  const unchosen = await world.fake.widgetAction(
+    WIDGET_KEY,
+    'run_ediskchk002',
+    { event: 'ediskchk002' },
+    { settings },
+  );
+  assert.equal(unchosen.success, false);
   await world.fake.configUpdated({ ...CONFIG, allow_run: false });
-  const off = await world.fake.widgetAction(WIDGET_KEY, 'run_ebackup0001', {
-    event: 'ebackup0001',
-  });
+  const off = await world.fake.widgetAction(
+    WIDGET_KEY,
+    'run_ebackup0001',
+    { event: 'ebackup0001' },
+    { settings },
+  );
   assert.equal(off.success, false);
   const noButtons = await world.fake.widgetGet(WIDGET_KEY, { settings, language: 'en' });
   assert.deepEqual(

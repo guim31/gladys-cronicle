@@ -34,3 +34,9 @@ test('defaults: French, reading only, every event, stuck after an hour', () => {
   assert.equal(normalizeConfig({ stuck_minutes: '0' }).stuckMs, 0);
   assert.equal(normalizeConfig({ api_key: '  k \n' }).apiKey, 'k');
 });
+
+test('the API key pasted in the list of events is dropped, never shown', () => {
+  const config = normalizeConfig({ api_key: 'abcdef0123456789', events: 'e1, abcdef0123456789' });
+  assert.deepEqual(config.events, ['e1']);
+  assert.deepEqual(config.invalidEvents, ['***']);
+});

@@ -125,8 +125,7 @@ enviarlo. **Actualizar** vuelve a leer Cronicle.
 - **Una tarea de Cronicle está bloqueada**: una tarea de un evento seguido
   dura más que el umbral de la configuración, una vez por tarea. Variables:
   nombre del evento, en curso desde hace (min), identificador de la tarea.
-- **Cronicle deja de responder**: Cronicle respondía en la lectura anterior y
-  ya no responde, una vez. Variable: el motivo.
+- **Cronicle deja de responder**: Cronicle respondía y ya no responde, dos lecturas seguidas; una vez. Variable: el motivo.
 - **Cronicle vuelve a responder**: tras un corte. Variable: duración del corte
   (min).
 

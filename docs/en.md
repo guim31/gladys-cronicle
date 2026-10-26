@@ -114,8 +114,7 @@ confirmation before sending it. **Refresh** reads Cronicle again.
 - **A Cronicle job is stuck**: a job of a followed event runs longer than the
   threshold of the configuration, once per job. Variables: event name, running
   for (min), job id.
-- **Cronicle stops answering**: Cronicle answered at the previous read and no
-  longer does, once. Variable: the reason.
+- **Cronicle stops answering**: Cronicle answered and no longer does, two reads in a row; once. Variable: the reason.
 - **Cronicle answers again**: after it stopped answering. Variable: how long it
   was gone (min).
 

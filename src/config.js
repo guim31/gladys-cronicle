@@ -116,13 +116,19 @@ export function normalizeConfig(raw = {}) {
   const choice = (key, list) =>
     list.includes(String(source[key])) ? String(source[key]) : DEFAULT_CONFIG[key];
   const typed = text('url');
+  const apiKey = text('api_key');
   const events = parseEventIds(source.events);
+  if (apiKey && events.ids.includes(apiKey)) {
+    // The key pasted in the wrong field: never logged nor reported as an id.
+    events.ids = events.ids.filter((id) => id !== apiKey);
+    events.invalid.push('***');
+  }
   return {
     // null: nothing typed, or not understood (see hub.connectionStatus).
     url: typed ? parseServerUrl(typed) : null,
     urlTyped: Boolean(typed),
     // A pasted key often carries a trailing space or new line.
-    apiKey: text('api_key'),
+    apiKey,
     // Empty: every event of the schedule (MAX_EVENTS at most).
     events: events.ids,
     invalidEvents: events.invalid,

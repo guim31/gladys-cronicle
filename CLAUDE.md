@@ -227,12 +227,11 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   événements suivis (tous par défaut, 50 au plus, ou la liste `events`) ; **chaque commande revérifie**
   (`hub.assertRunAllowed`, `hub.eventOf`). Aucune commande sur les appareils ; boutons du widget avec
   `confirm: true`, seulement pour les événements choisis dans ses réglages.
-- **Fins de tâche** : une ligne de `get_history` jamais vue (`seen`, ids de la lecture précédente) et
-  finie après la plus récente déjà vue (`lastEnd`, marge 2 s : une tâche supprimée fait entrer une
-  plus ancienne dans la fenêtre) ; rien au premier passage. « Bloquée » : tâche en cours depuis plus du
-  seuil, une fois par tâche (`stuck` dans `/data`). « Ne répond plus » / « répond de nouveau » : une
-  fois par coupure, seulement après une lecture réussie avec la même adresse et la même clé (une clé
-  fausse tout juste saisie n'est pas une coupure).
+- **Fins de tâche** : une ligne de `get_history` jamais vue (`seen`, ids de la lecture précédente) et pas plus ancienne que la plus ancienne de la lecture précédente (`lastEnd`, marge 2 s : une tâche supprimée fait entrer une plus ancienne dans la fenêtre ; une tâche enregistrée en retard compte quand même) ; rien au premier passage. « Bloquée » : tâche en cours depuis plus du
+  seuil, une fois par tâche (`stuck` dans `/data`). « Ne répond plus » (après **deux lectures en échec de suite**) / « répond de nouveau » : une fois par coupure, seulement après une lecture réussie avec la même adresse et la même clé (une clé
+  fausse tout juste saisie n'est pas une coupure). Un changement d'adresse ou de clé remet `initialized` à faux :
+  une nouvelle clé peut voir d'autres catégories, leurs tâches passées ne sont pas annoncées. La clé collée
+  par erreur dans `events` est retirée et affichée `***`.
 - Minuteur du conteneur : `pollIntervalMs`, **5 s tant qu'une tâche d'un événement suivi tourne** ;
   une lecture hors minuteur (Actualiser, commande) qui voit une tâche en cours accélère aussitôt le
   minuteur.

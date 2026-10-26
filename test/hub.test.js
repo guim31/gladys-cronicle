@@ -263,6 +263,8 @@ test('Cronicle lost while the integration was stopped: announced at the start', 
   await first.app.stop();
   cronicle.down = 'ECONNREFUSED';
   const second = await createWorld({ clock, cronicle, dataDir: first.dataDir });
+  assert.equal(events(second, TRIGGERS.UNREACHABLE).length, 0, 'one failed read is not an outage');
+  await second.hub.pollNow();
   await second.app.stop();
   assert.equal(events(second, TRIGGERS.UNREACHABLE).length, 1);
   clock.advance(3 * 60_000);
@@ -286,6 +288,17 @@ test('a wrong key typed is not "Cronicle stops answering", and is never logged',
   assert.match(world.fake.connectionStatus.message.en, /API key refused/);
   assert.equal(lines.join('\n').includes('wrong-secret-key-123'), false);
   assert.match(lines.join('\n'), /Invalid API Key: \*\*\*/);
+});
+
+test('another key announces nothing from the past', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  // Jobs the previous key could not see (another category), then a new key.
+  world.cronicle.ran('Long sync');
+  world.hub.saved.seen.push(world.cronicle.history[0].id);
+  world.cronicle.history.splice(0, 0, { ...world.cronicle.history[0], id: 'jhidden0001' });
+  await world.fake.configUpdated({ ...CONFIG, api_key: 'cronicle_read_key_0000000000000002' });
+  assert.equal(world.fake.sceneEvents.length, 0);
 });
 
 test('a normal reading cycle writes nothing at the info level', async (t) => {

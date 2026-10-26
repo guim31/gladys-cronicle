@@ -506,10 +506,10 @@
         "es": "Cronicle deja de responder"
       },
       "description": {
-        "en": "Cronicle answered at the previous read and no longer does (once, until it answers again).",
-        "fr": "Cronicle répondait à la lecture précédente et ne répond plus (une fois, jusqu'à ce qu'il réponde de nouveau).",
-        "de": "Cronicle hat beim vorigen Lesen geantwortet und tut es nicht mehr (einmal, bis es wieder antwortet).",
-        "es": "Cronicle respondía en la lectura anterior y ya no responde (una vez, hasta que vuelva a responder)."
+        "en": "Cronicle answered before and no longer does, two reads in a row (once, until it answers again).",
+        "fr": "Cronicle répondait et ne répond plus, deux lectures de suite (une fois, jusqu'à ce qu'il réponde de nouveau).",
+        "de": "Cronicle hat geantwortet und tut es zweimal hintereinander nicht mehr (einmal, bis es wieder antwortet).",
+        "es": "Cronicle respondía y ya no responde, dos lecturas seguidas (una vez, hasta que vuelva a responder)."
       },
       "variables": [
         {

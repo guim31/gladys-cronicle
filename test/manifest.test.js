@@ -123,6 +123,7 @@ test('the scene triggers are the ones the hub fires, with their filters and vari
   await world.hub.pollNow();
   world.cronicle.down = 'ECONNREFUSED';
   await world.hub.pollNow();
+  await world.hub.pollNow();
   world.cronicle.down = null;
   await world.hub.pollNow();
   const fired = new Map(world.fake.sceneEvents.map((event) => [event.key, event.data]));

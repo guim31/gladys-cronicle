@@ -168,7 +168,8 @@ async function get(hub, { settings, language = 'en' }) {
   return { ttl_seconds: moving ? 10 : 60, components };
 }
 
-async function action(hub, { actionKey, params = {} }) {
+async function action(hub, { actionKey, params = {}, settings, language }) {
+  const lang = language ?? hub.config.language;
   if (actionKey === ACTIONS.REFRESH) {
     await hub.pollNow();
     return { message: hub.error ? ERROR_TEXT[hub.error.kind] : TEXT.refreshed };
@@ -179,13 +180,18 @@ async function action(hub, { actionKey, params = {} }) {
   }
   // The switch and the followed events are checked again here: the content
   // may predate a change of the configuration.
-  hub.assertRunAllowed();
-  const event = await hub.eventOf(match[2]);
+  hub.assertRunAllowed(lang);
+  // Only the events chosen in the settings carry a button.
+  const chosen = settings ? chosenEvents(hub, settings) : null;
+  if (settings && !chosen?.has(match[2])) {
+    throw new Error(`Unknown action ${actionKey}`);
+  }
+  const event = await hub.eventOf(match[2], lang);
   if (match[1] === ACTIONS.RUN) {
-    const started = await hub.run(event);
+    const started = await hub.run(event, lang);
     return { message: started.queued ? ACTION_TEXT.queued : ACTION_TEXT.launched };
   }
-  const aborted = await hub.abort(event);
+  const aborted = await hub.abort(event, lang);
   return { message: aborted ? ACTION_TEXT.abortRequested : ACTION_TEXT.nothingRunning };
 }
 

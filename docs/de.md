@@ -121,8 +121,7 @@ bittet vor dem Senden um Bestätigung. **Aktualisieren** liest Cronicle neu.
 - **Ein Cronicle-Job hängt**: Ein Job eines verfolgten Ereignisses läuft
   länger als die Schwelle der Konfiguration, einmal pro Job. Variablen: Name
   des Ereignisses, läuft seit (min), Job-ID.
-- **Cronicle antwortet nicht mehr**: Cronicle hat beim vorigen Lesen
-  geantwortet und tut es nicht mehr, einmal. Variable: der Grund.
+- **Cronicle antwortet nicht mehr**: Cronicle hat geantwortet und tut es zweimal hintereinander nicht mehr; einmal. Variable: der Grund.
 - **Cronicle antwortet wieder**: nach einem Ausfall. Variable: Dauer des
   Ausfalls (min).
 
